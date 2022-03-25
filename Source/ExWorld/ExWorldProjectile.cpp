@@ -5,6 +5,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 #include "ExPlayerController.h"
 
@@ -41,7 +42,7 @@ AExWorldProjectile::AExWorldProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
-	bIsAOE = false;
+	NumsCanAffected = 1;
 
 }
 
@@ -65,6 +66,13 @@ void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	{
 		return;
 	}
+
+	if (AlreadyAffectedNumsOfActors >= NumsCanAffected)
+	{
+		Destroy();
+		return;
+	}
+	ChangeAlreadyAffectedNumsOfActors();
 
 	FEffectData EffectData;
 	EObjectType ObjectType;
@@ -95,11 +103,30 @@ void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	}
 
 	PC->OnApplyEffect(OtherActor, EffectData);
-	
-	if (!bIsAOE)
+
+}
+
+void AExWorldProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AExWorldProjectile, AlreadyAffectedNumsOfActors);
+}
+
+void AExWorldProjectile::OnRep_AlreadyAffectedNumsOfActors()
+{
+	if (AlreadyAffectedNumsOfActors >= NumsCanAffected)
 	{
 		Destroy();
 	}
+}
 
+void AExWorldProjectile::ChangeAlreadyAffectedNumsOfActors_Implementation()
+{
+	AlreadyAffectedNumsOfActors++;
+}
 
+bool AExWorldProjectile::ChangeAlreadyAffectedNumsOfActors_Validate()
+{
+	return true;
 }
