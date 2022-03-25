@@ -3,6 +3,8 @@
 
 #include "ExPlayerController.h"
 
+#include "UI/ExTimeLimitationShow.h"
+
 
 void AExPlayerController::BeginPlay()
 {
@@ -19,6 +21,13 @@ void AExPlayerController::BeginPlay()
 		ConfigureData.Add(pRow->AffectType, pRow->AffectData);
 	}
 
+}
+
+void AExPlayerController::ShowTimeLimitation(const int64 TimeLeft)
+{
+	UITimeLimitation = CreateWidget<UExTimeLimitationShow>(this, TimeLimitationClass);
+	UITimeLimitation->AddToViewport();
+	UITimeLimitation->UpdateTImeLeft(TimeLeft);
 }
 
 bool AExPlayerController::GetEffectDataByObjectType(const EObjectType ObjectType, FEffectData& EffectData)

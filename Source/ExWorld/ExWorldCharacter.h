@@ -42,6 +42,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* SpellSkillAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CoolDownTimeForSpellSkill;
 
 protected:
 
@@ -74,9 +76,15 @@ protected:
 	void StartSpawnProjectile();
 
 
+	UPROPERTY(ReplicatedUsing = OnRep_LastSpellTime)
+	int64 LastSpellTime;
+	UFUNCTION()
+	void OnRep_LastSpellTime();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	// End of APawn interface
 
 public:
