@@ -34,4 +34,8 @@ public:
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
+	UPROPERTY(EditAnywhere)
+	bool bIsAOE;
+
+
 };

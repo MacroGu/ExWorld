@@ -145,12 +145,12 @@ void AExWorldCharacter::MulticastClientSpellAbility_Implementation()
 	}
 
 	PlaySpellAbilityAnimation();
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("1")));
 }
 
 void AExWorldCharacter::ReqSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+	AActor* NewProjectile = GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+	NewProjectile->SetOwner(this);
 }
 
 void AExWorldCharacter::StartSpawnProjectile()

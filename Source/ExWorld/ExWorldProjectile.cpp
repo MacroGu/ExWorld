@@ -4,6 +4,9 @@
 #include "ExWorldProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "ExPlayerController.h"
 
 
 
@@ -13,6 +16,8 @@ AExWorldProjectile::AExWorldProjectile()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
+
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
@@ -36,18 +41,65 @@ AExWorldProjectile::AExWorldProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
-
-	SetReplicates(true);
+	bIsAOE = false;
 
 }
 
 void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
-	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+	AActor* owner = GetOwner();
 
+	if (owner == OtherActor)
+	{
+		return;
+	}
+	
+	AExAffectedItem* AfftectedItem = Cast<AExAffectedItem>(OtherActor);
+	if (!IsValid(AfftectedItem))
+	{
+		return;
+	}
+
+	AExPlayerController* PC = Cast<AExPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (!PC)
+	{
+		return;
+	}
+
+	FEffectData EffectData;
+	EObjectType ObjectType;
+	ECollisionChannel CollisionChannel = AfftectedItem->GetCollisionComp()->GetCollisionObjectType();
+	if (ECollisionChannel::ECC_Destructible == CollisionChannel)
+	{
+		ObjectType = EObjectType::Destructible;
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("ECC_Destructible"));
+	}
+	else if (ECollisionChannel::ECC_WorldStatic == CollisionChannel)
+	{
+		ObjectType = EObjectType::WorldStatic;
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("ECC_WorldStatic"));
+	}
+	else if (ECollisionChannel::ECC_Pawn == CollisionChannel)
+	{
+		ObjectType = EObjectType::Pawn;
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("ECC_Pawn"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("nothing"));
+	}
+
+	if (!PC->GetEffectDataByObjectType(ObjectType, EffectData))
+	{
+		return;
+	}
+
+	PC->OnApplyEffect(OtherActor, EffectData);
+	
+	if (!bIsAOE)
+	{
 		Destroy();
 	}
+
+
 }
