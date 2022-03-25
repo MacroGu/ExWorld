@@ -182,8 +182,16 @@ void AExWorldCharacter::MulticastClientSpellAbility_Implementation()
 
 void AExWorldCharacter::ReqSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	AActor* NewProjectile = GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-	NewProjectile->SetOwner(this);
+	FActorSpawnParameters params;
+	params.Owner = this;
+	params.Instigator = this;
+	params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	FTransform BulletSpawnTransform;
+	BulletSpawnTransform.SetLocation(GetActorLocation());
+	BulletSpawnTransform.SetRotation(SpawnRotation.Quaternion());
+
+	GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, BulletSpawnTransform, params);
 }
 
 void AExWorldCharacter::StartSpawnProjectile()
