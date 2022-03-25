@@ -146,34 +146,17 @@ void AExWorldCharacter::MulticastClientSpellAbility_Implementation()
 
 	PlaySpellAbilityAnimation();
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("1")));
-
 }
 
 void AExWorldCharacter::ReqSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	MulticastSpawnProjectile(SpawnLocation, SpawnRotation);
-}
-
-void AExWorldCharacter::MulticastSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
-{
-	if (bIsSelfPlayingAbilityAnimation)
-	{
-		bIsSelfPlayingAbilityAnimation = false;
-		return;
-	}
-
-	bIsSelfPlayingAbilityAnimation = false;
-	SpawnProjectile(SpawnLocation, SpawnRotation);
-}
-
-void AExWorldCharacter::SpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation)
-{
 	GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-	GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Yellow, FString::Printf(TEXT("2")));
 }
 
 void AExWorldCharacter::StartSpawnProjectile()
 {
+	
 	ReqSpawnProjectile(GetActorLocation(), GetActorRotation());
-	SpawnProjectile(GetActorLocation(), GetActorRotation());
+	bIsSelfPlayingAbilityAnimation = false;
+
 }

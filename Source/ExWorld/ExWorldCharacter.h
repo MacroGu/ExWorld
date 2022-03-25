@@ -69,11 +69,6 @@ protected:
 
 	UFUNCTION(Server, reliable, BlueprintCallable)
 	void ReqSpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation);
-	
-	UFUNCTION(NetMulticast, reliable)
-	void MulticastSpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation);
-
-	void SpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation);
 
 	UFUNCTION(BlueprintCallable)
 	void StartSpawnProjectile();
