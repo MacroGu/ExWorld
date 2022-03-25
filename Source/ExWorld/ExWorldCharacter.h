@@ -23,6 +23,7 @@ class AExWorldCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
 public:
 	AExWorldCharacter();
 
@@ -41,6 +42,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* SpellSkillAnimation;
 
+
 protected:
 
 	void MoveForward(float Value);
@@ -52,6 +54,29 @@ protected:
 	void LookUpAtRate(float Rate);
 
 	void OnSpellSkill();
+
+	void PlaySpellAbilityAnimation();
+
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsSelfPlayingAbilityAnimation;
+
+	UFUNCTION(Server, reliable, BlueprintCallable)
+	void ReqSpellAbility();
+
+	UFUNCTION(NetMulticast, reliable)
+	void MulticastClientSpellAbility();
+
+	UFUNCTION(Server, reliable, BlueprintCallable)
+	void ReqSpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation);
+	
+	UFUNCTION(NetMulticast, reliable)
+	void MulticastSpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation);
+
+	void SpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation);
+
+	UFUNCTION(BlueprintCallable)
+	void StartSpawnProjectile();
 
 
 protected:

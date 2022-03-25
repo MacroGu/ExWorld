@@ -9,6 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Animation/AnimInstance.h"
+#include "ExWorldProjectile.h"
 
 
 
@@ -28,6 +29,7 @@ AExWorldCharacter::AExWorldCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+	bIsSelfPlayingAbilityAnimation = false;
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
@@ -112,9 +114,66 @@ void AExWorldCharacter::MoveRight(float Value)
 
 void AExWorldCharacter::OnSpellSkill()
 {
+	// client check if can spell skill
+
+	ReqSpellAbility();
+	bIsSelfPlayingAbilityAnimation = true;
+	PlaySpellAbilityAnimation();
+
+}
+
+void AExWorldCharacter::PlaySpellAbilityAnimation()
+{
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance != nullptr)
 	{
 		PlayAnimMontage(SpellSkillAnimation, 1.f);
 	}
+}
+
+void AExWorldCharacter::ReqSpellAbility_Implementation()
+{
+	// server check if can spell ability
+	MulticastClientSpellAbility();
+}
+
+void AExWorldCharacter::MulticastClientSpellAbility_Implementation()
+{
+	if (bIsSelfPlayingAbilityAnimation)
+	{
+		return;
+	}
+
+	PlaySpellAbilityAnimation();
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("1")));
+
+}
+
+void AExWorldCharacter::ReqSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
+{
+	MulticastSpawnProjectile(SpawnLocation, SpawnRotation);
+}
+
+void AExWorldCharacter::MulticastSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
+{
+	if (bIsSelfPlayingAbilityAnimation)
+	{
+		bIsSelfPlayingAbilityAnimation = false;
+		return;
+	}
+
+	bIsSelfPlayingAbilityAnimation = false;
+	SpawnProjectile(SpawnLocation, SpawnRotation);
+}
+
+void AExWorldCharacter::SpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation)
+{
+	GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+	GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Yellow, FString::Printf(TEXT("2")));
+}
+
+void AExWorldCharacter::StartSpawnProjectile()
+{
+	ReqSpawnProjectile(GetActorLocation(), GetActorRotation());
+	SpawnProjectile(GetActorLocation(), GetActorRotation());
 }
