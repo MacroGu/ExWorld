@@ -11,6 +11,9 @@
 
 
 class USphereComponent;
+class UExCharacterStatusBarWidget;
+
+
 
 UENUM(BlueprintType)
 enum class EObjectType : uint8
@@ -68,14 +71,32 @@ public:
 	AExAffectedItem();
 
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
+	void InitWidgetComponent();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EObjectType ObjectType;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ExWorld|UI")
+	TSubclassOf<UExCharacterStatusBarWidget> UIExCharacterStatusBarClass;
+
+	UPROPERTY()
+	UExCharacterStatusBarWidget* UIExCharacterStatusBarWidget;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "ExWorld|UI")
+	class UWidgetComponent* UIExCharacterStatusBarComponent;
+
+
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHP)
+	int64 CurrentHP = 100;
+	UFUNCTION()
+	void OnRep_CurrentHP();
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+	void ChangeHealth(int32 NewValue);
 
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 };

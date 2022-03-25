@@ -44,7 +44,7 @@ void AExPlayerController::OnApplyEffect(AActor* AffectedActor, const FEffectData
 
 	if (EObjectType::Pawn == EffectData.ResultType)
 	{
-
+		AfftectedItem->ChangeHealth(EffectData.HpChange);
 	}
 	else if (EObjectType::WorldStatic == EffectData.ResultType)
 	{
