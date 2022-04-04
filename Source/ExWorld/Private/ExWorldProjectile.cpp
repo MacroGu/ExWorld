@@ -48,13 +48,17 @@ AExWorldProjectile::AExWorldProjectile()
 
 void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	AActor* owner = GetOwner();
-
-	if (owner == OtherActor)
+	if (GetInstigator() == OtherActor)
 	{
 		return;
 	}
-	
+
+	ChangeAlreadyAffectedNumsOfActors();
+	if (AlreadyAffectedNumsOfActors >= NumsCanAffected)
+	{
+		Destroy();
+	}
+
 	AExAffectedItem* AfftectedItem = Cast<AExAffectedItem>(OtherActor);
 	if (!IsValid(AfftectedItem))
 	{
@@ -66,13 +70,6 @@ void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	{
 		return;
 	}
-
-	if (AlreadyAffectedNumsOfActors >= NumsCanAffected)
-	{
-		Destroy();
-		return;
-	}
-	ChangeAlreadyAffectedNumsOfActors();
 
 	FEffectData EffectData;
 	EObjectType ObjectType;
@@ -94,11 +91,12 @@ void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("nothing"));
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("nothing"));
 	}
 
 	if (!PC->GetEffectDataByObjectType(ObjectType, EffectData))
 	{
+		// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("5 OnHit"));
 		return;
 	}
 
