@@ -9,6 +9,7 @@
 
 
 
+class UExTimeLimitationShow;
 
 
 /**
@@ -26,6 +27,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+	void ShowTimeLimitation(const int64 TimeLeft);
+
 	void OnApplyEffect(AActor* AffectedActor, const FEffectData& EffectData);
 	
 	bool GetEffectDataByObjectType(const EObjectType ObjectType, FEffectData& EffectData);
@@ -35,7 +38,12 @@ public:
 	UFUNCTION(NetMulticast, reliable)
 	void MulticastAffectObjectResult();
 
+	UPROPERTY(EditAnywhere, Category = "ExWorldTest|UI")
+	TSubclassOf<UExTimeLimitationShow> TimeLimitationClass;
 
+protected:
+	UPROPERTY(BlueprintReadWrite, Category = "ExWorld|UI")
+	UExTimeLimitationShow* UITimeLimitation;
 
 private:
 	TMap<EObjectType, FEffectData> ConfigureData;

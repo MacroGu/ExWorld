@@ -22,6 +22,9 @@ class EXWORLD_API AExWorldProjectile : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UProjectileMovementComponent* ProjectileMovement;
 
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
 	AExWorldProjectile();
 
@@ -35,7 +38,14 @@ public:
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 	UPROPERTY(EditAnywhere)
-	bool bIsAOE;
+	int32 NumsCanAffected;
 
+	UPROPERTY(ReplicatedUsing = OnRep_AlreadyAffectedNumsOfActors)
+	int32 AlreadyAffectedNumsOfActors;
+	UFUNCTION()
+	void OnRep_AlreadyAffectedNumsOfActors();
+
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+	void ChangeAlreadyAffectedNumsOfActors();
 
 };

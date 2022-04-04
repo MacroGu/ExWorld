@@ -8,9 +8,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Animation/AnimInstance.h"
-#include "ExWorldProjectile.h"
+#include "Net/UnrealNetwork.h"
 
+#include "ExPlayerController.h"
+#include "ExWorldProjectile.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -48,6 +51,8 @@ AExWorldCharacter::AExWorldCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	CoolDownTimeForSpellSkill = 10;
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -68,6 +73,14 @@ void AExWorldCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AExWorldCharacter::LookUpAtRate);
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AExWorldCharacter::OnSpellSkill);
+
+}
+
+void AExWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AExWorldCharacter, LastSpellTime);
 
 }
 
@@ -115,10 +128,22 @@ void AExWorldCharacter::MoveRight(float Value)
 void AExWorldCharacter::OnSpellSkill()
 {
 	// client check if can spell skill
+	int64 LeftTime = FDateTime::Now().ToUnixTimestamp() - LastSpellTime;
+	if (LeftTime > CoolDownTimeForSpellSkill)
+	{
+		ReqSpellAbility();
+		bIsSelfPlayingAbilityAnimation = true;
+		PlaySpellAbilityAnimation();
+		return;
+	}
 
-	ReqSpellAbility();
-	bIsSelfPlayingAbilityAnimation = true;
-	PlaySpellAbilityAnimation();
+	AExPlayerController* PC = Cast<AExPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (!IsValid(PC))
+	{
+		return;
+	}
+
+	PC->ShowTimeLimitation(CoolDownTimeForSpellSkill - LeftTime);
 
 }
 
@@ -134,6 +159,14 @@ void AExWorldCharacter::PlaySpellAbilityAnimation()
 void AExWorldCharacter::ReqSpellAbility_Implementation()
 {
 	// server check if can spell ability
+	int64 CurrentTime = FDateTime::Now().ToUnixTimestamp();
+	if (CurrentTime - LastSpellTime < CoolDownTimeForSpellSkill)
+	{
+		return;
+	}
+
+	LastSpellTime = CurrentTime;
+
 	MulticastClientSpellAbility();
 }
 
@@ -149,8 +182,16 @@ void AExWorldCharacter::MulticastClientSpellAbility_Implementation()
 
 void AExWorldCharacter::ReqSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	AActor* NewProjectile = GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-	NewProjectile->SetOwner(this);
+	FActorSpawnParameters params;
+	params.Owner = this;
+	params.Instigator = this;
+	params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	FTransform BulletSpawnTransform;
+	BulletSpawnTransform.SetLocation(GetActorLocation());
+	BulletSpawnTransform.SetRotation(SpawnRotation.Quaternion());
+
+	GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, BulletSpawnTransform, params);
 }
 
 void AExWorldCharacter::StartSpawnProjectile()
@@ -158,5 +199,10 @@ void AExWorldCharacter::StartSpawnProjectile()
 	
 	ReqSpawnProjectile(GetActorLocation(), GetActorRotation());
 	bIsSelfPlayingAbilityAnimation = false;
+
+}
+
+void AExWorldCharacter::OnRep_LastSpellTime()
+{
 
 }
