@@ -180,24 +180,19 @@ void AExWorldCharacter::MulticastClientSpellAbility_Implementation()
 	PlaySpellAbilityAnimation();
 }
 
-void AExWorldCharacter::ReqSpawnProjectile_Implementation(FVector SpawnLocation, FRotator SpawnRotation)
+void AExWorldCharacter::ReqSpawnProjectile_Implementation()
 {
 	FActorSpawnParameters params;
 	params.Owner = this;
 	params.Instigator = this;
-	params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	FTransform BulletSpawnTransform;
-	BulletSpawnTransform.SetLocation(GetActorLocation());
-	BulletSpawnTransform.SetRotation(SpawnRotation.Quaternion());
-
-	GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, BulletSpawnTransform, params);
+	GetWorld()->SpawnActor<AExWorldProjectile>(ProjectileClass, GetActorLocation(), GetActorRotation(), params);
 }
 
 void AExWorldCharacter::StartSpawnProjectile()
 {
 	
-	ReqSpawnProjectile(GetActorLocation(), GetActorRotation());
+	ReqSpawnProjectile();
 	bIsSelfPlayingAbilityAnimation = false;
 
 }

@@ -23,7 +23,7 @@ AExWorldProjectile::AExWorldProjectile()
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	CollisionComp->OnComponentHit.AddDynamic(this, &AExWorldProjectile::OnHit);		// set up a notification for when this component hits something blocking
+	CollisionComp->OnComponentHit.AddDynamic(this, &AExWorldProjectile::OnHit);		
 
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -39,6 +39,7 @@ AExWorldProjectile::AExWorldProjectile()
 	ProjectileMovement->MaxSpeed = 3000.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
+	ProjectileMovement->ProjectileGravityScale = 0.f;
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
@@ -46,7 +47,7 @@ AExWorldProjectile::AExWorldProjectile()
 
 }
 
-void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (GetInstigator() == OtherActor)
 	{
@@ -101,6 +102,7 @@ void AExWorldProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	}
 
 	PC->OnApplyEffect(OtherActor, EffectData);
+
 
 }
 

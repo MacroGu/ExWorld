@@ -70,7 +70,7 @@ protected:
 	void MulticastClientSpellAbility();
 
 	UFUNCTION(Server, reliable, BlueprintCallable)
-	void ReqSpawnProjectile(FVector SpawnLocation, FRotator SpawnRotation);
+	void ReqSpawnProjectile();
 
 	UFUNCTION(BlueprintCallable)
 	void StartSpawnProjectile();
